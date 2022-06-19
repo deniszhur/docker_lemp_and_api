@@ -1,0 +1,61 @@
+version: '3'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: db
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - MYSQL_DATABASE=wordpress
+    volumes:
+      - "./db:/var/lib/mysql"
+    command: '--default-authentication-plugin=mysql_native_password'
+    networks:
+      - app-network
+
+  wordpress:
+    depends_on:
+      - db
+    image: wordpress:5.7.0-php8.0-fpm
+    container_name: wordpress
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - WORDPRESS_DB_HOST=db:3306
+      - WORDPRESS_DB_USER=$MYSQL_USER
+      - WORDPRESS_DB_PASSWORD=$MYSQL_PASSWORD
+      - WORDPRESS_DB_NAME=wordpress
+    volumes:
+      - "./wp:/var/www/html/"
+    networks:
+      - app-network
+
+  nginx:
+    depends_on:
+      - wordpress
+    image: nginx:1.19.8-alpine
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - "./wp:/var/www/html/"
+      - ./nginx-conf:/etc/nginx/conf.d
+    networks:
+      - app-network
+
+  myapi:
+    depends_on:
+      - db
+    build: .
+    container_name: myapi
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
