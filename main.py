@@ -11,6 +11,7 @@ def time_now():
     return {"full_time" : str(now),
             "year" : now.year,
             "month" : now.month,
+            "hour" : now.hour,
             "day" : now.day,
             "minute" : now.minute,
             "second" : now.second,
